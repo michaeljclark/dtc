@@ -1,30 +1,18 @@
-language: c
+services:
+  - docker
 
-# Coverity Scan uploads
-env:
-  global:
-  # COVERITY_SCAN_TOKEN (dgibson/dtc)
-  - secure: "vlHvXe618//IM9LQaKzqsrUbjs7ng0L9UCST4kJbJnFQDXvVe5JiSmJGd4ef7mm0NUv5bMRl2W3xCiu6BYAu/NvU3tMNHoLG+JgCJs0+wLJXbWOwji/NmH7olqgJG+CmpaCMXjARF6+nrTnBYHJL6cYyf4KVoV4B0I/hLUW91+s="
-
-matrix:
-  include:
-    - addons:
-        apt:
-          packages:
-            - swig
-            - python-dev
-        coverity_scan:
-          project:
-            name: dtc
-            description: Device Tree Compiler
-          notification_email: david@gibson.dropbear.id.au
-          build_command: make
-          branch_pattern: coverity_scan
-
-    - addons:
-        apt:
-          packages:
+before_install:
+  - docker build -t dtc-centos .
 
 script:
-        - make
-        - make check
+  - docker run --rm -e PACKAGE_VERSION=${TRAVIS_TAG:-0.0-UNTAGGED} -v $PWD:/usr/src/app dtc-centos ./build-rpm.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "jwXDZ8HDMNQcQAGA9uX1ZTB8B/MrJGchH7J8zVKQzygExlwY7IPN2Iv9aIEx5mYT40hC5eQNGb+6KDUCvo1O2ohydQErnNZc3FVvzMxA0P7EBnSSYUsTe3yT17AM6w+pSaJFhjSQ5X3HJ4GuTSRB8Tu7owxJni8TfiPj1cVAIVx2OxW7Yo3tYMDIrDBdJy6kEzLbuMS01QOUCTYlshjhgmf03L8h6InyiITlw0Ffreifs9meJ2Dc3/co6dPhWO7C4+VKXSOdDotPajLU6UOwtQ+IeKLTjKYucBT1yu7+lPpoUq1TO31flhRnkwMpajwZwrTFOxndF9+khbRnXfmNoS1zAg2weZcUM1vCn+7OTUZoCZPiPz8kBonBAo15K7ZqVn00vU5tPaqqXZ2aZCjNZh+tLZhcsaaFqUPPRe/drkPIpPHTnB8n5thAphCqOXVX/QCJV8ly+VEihPBWGY5Z+X7tdkPmC+M7bINMe80ZWhIW92cRQzzl2aPequVn6g4u9tRFCmF3qSvQz92Q3LL0kmJzSoG1q9jv6yJccER5DRSqnwrktaF8XthaHADcqLr5CJYwKxCgvy3QB4I7F+6lh1GngATcciopJruBGs9+gNjqoSrduhzQacF3Xgcq3XA/946xivK883vHiDQ/+mvPU44xYFaU3uuvex/cFrR/jaU="
+  file: dtc-${TRAVIS_TAG}.x86_64.rpm
+  skip_cleanup: true
+  on:
+    repo: michaeljclark/dtc
+    tags: true
